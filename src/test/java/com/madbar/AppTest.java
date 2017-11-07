@@ -3,6 +3,7 @@ package com.madbar;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.junit.Assert;
 
 /**
  * Unit test for simple App.
@@ -28,15 +29,76 @@ public class AppTest
         return new TestSuite( AppTest.class );
     }
 
-    /**
-     * Rigourous Test :-)
-     */
-    public void testApp()
-    {
-        assertTrue( true );
-    }
 
+    public void testPuzzleInitialBlankFieldCoordinates(){
+        FifteenPuzzle fifteenPuzzle = new FifteenPuzzle(4);
+
+        assertEquals(0, fifteenPuzzle.getBlankFieldX());
+        assertEquals(0, fifteenPuzzle.getBlankFieldY());
+    }
+    public void testPuzzleMoveRight(){
+        FifteenPuzzle fifteenPuzzle = new FifteenPuzzle(4);
+        assertTrue(fifteenPuzzle.moveRight());
+
+        assertEquals(1, fifteenPuzzle.getBlankFieldX());
+        assertEquals(0, fifteenPuzzle.getBlankFieldY());
+        assertEquals(1, fifteenPuzzle.getPuzzleValueOnPlace(0,0));
+        assertEquals(0, fifteenPuzzle.getPuzzleValueOnPlace(1,0));
+    }
+    public void testPuzzleMoveLeft(){
+        FifteenPuzzle fifteenPuzzle = new FifteenPuzzle(4);
+        assertFalse(fifteenPuzzle.moveLeft());
+
+        assertTrue(fifteenPuzzle.moveRight());
+        assertTrue(fifteenPuzzle.moveLeft());
+
+        assertEquals(0, fifteenPuzzle.getBlankFieldX());
+        assertEquals(0, fifteenPuzzle.getBlankFieldY());
+        assertEquals(1, fifteenPuzzle.getPuzzleValueOnPlace(1,0));
+        assertEquals(0, fifteenPuzzle.getPuzzleValueOnPlace(0,0));
+    }
+    public void testPuzzleMoveDown(){
+        FifteenPuzzle fifteenPuzzle = new FifteenPuzzle(4);
+        assertTrue(fifteenPuzzle.moveDown());
+
+        assertEquals(0, fifteenPuzzle.getBlankFieldX());
+        assertEquals(1, fifteenPuzzle.getBlankFieldY());
+        assertEquals(0, fifteenPuzzle.getPuzzleValueOnPlace(0,1));
+        assertEquals(4, fifteenPuzzle.getPuzzleValueOnPlace(0,0));
+    }
     public void testPuzzleMoveUp(){
-        assertTrue( true );
+        FifteenPuzzle fifteenPuzzle = new FifteenPuzzle(4);
+        assertFalse(fifteenPuzzle.moveUp());
+
+        assertTrue(fifteenPuzzle.moveDown());
+        assertTrue(fifteenPuzzle.moveUp());
+
+        assertEquals(0, fifteenPuzzle.getBlankFieldX());
+        assertEquals(0, fifteenPuzzle.getBlankFieldY());
+        assertEquals(0, fifteenPuzzle.getPuzzleValueOnPlace(0,0));
+        assertEquals(4, fifteenPuzzle.getPuzzleValueOnPlace(0,1));
+    }
+    public void testPuzzleAllMovesCombination(){
+        FifteenPuzzle fifteenPuzzle = new FifteenPuzzle(4);
+
+        assertFalse(fifteenPuzzle.moveLeft());
+        assertTrue(fifteenPuzzle.moveRight());
+        assertTrue(fifteenPuzzle.moveRight());
+        assertTrue(fifteenPuzzle.moveRight());
+        assertFalse(fifteenPuzzle.moveRight());
+
+        assertTrue(fifteenPuzzle.moveDown());
+        assertTrue(fifteenPuzzle.moveDown());
+
+        assertTrue(fifteenPuzzle.moveLeft());
+        assertTrue(fifteenPuzzle.moveLeft());
+
+        assertEquals(1, fifteenPuzzle.getBlankFieldX());
+        assertEquals(2, fifteenPuzzle.getBlankFieldY());
+        assertEquals(7, fifteenPuzzle.getPuzzleValueOnPlace(3, 0));
+        assertEquals(11, fifteenPuzzle.getPuzzleValueOnPlace(3, 1));
+        assertEquals(10, fifteenPuzzle.getPuzzleValueOnPlace(3, 2));
+        assertEquals(1, fifteenPuzzle.getPuzzleValueOnPlace(0,0));
+        assertEquals(9, fifteenPuzzle.getPuzzleValueOnPlace(2,2));
     }
 }
