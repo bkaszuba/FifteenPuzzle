@@ -3,12 +3,12 @@ package com.madbar;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.junit.Assert;
+import static org.junit.Assert.assertNotEquals;
 
 /**
- * Unit test for simple App.
+ * Unit test for simple Start.
  */
-public class AppTest 
+public class StartTest
     extends TestCase
 {
     /**
@@ -16,7 +16,7 @@ public class AppTest
      *
      * @param testName name of the test case
      */
-    public AppTest( String testName )
+    public StartTest(String testName )
     {
         super( testName );
     }
@@ -26,10 +26,10 @@ public class AppTest
      */
     public static Test suite()
     {
-        return new TestSuite( AppTest.class );
+        return new TestSuite( StartTest.class );
     }
 
-
+/*
     public void testPuzzleInitialBlankFieldCoordinates(){
         FifteenPuzzle fifteenPuzzle = new FifteenPuzzle(4);
 
@@ -101,4 +101,19 @@ public class AppTest
         assertEquals(1, fifteenPuzzle.getPuzzleValueOnPlace(0,0));
         assertEquals(9, fifteenPuzzle.getPuzzleValueOnPlace(2,2));
     }
+    public void testPuzzleShuffle(){
+        FifteenPuzzle fifteenPuzzle = new FifteenPuzzle(4);
+
+        assertEquals(0, fifteenPuzzle.getPuzzleValueOnPlace(0, 0));
+        assertEquals(1, fifteenPuzzle.getPuzzleValueOnPlace(1, 0));
+        assertEquals(4, fifteenPuzzle.getPuzzleValueOnPlace(0, 1));
+        assertEquals(15, fifteenPuzzle.getPuzzleValueOnPlace(3, 3));
+        //shuffle
+        fifteenPuzzle.shuffle(true);
+        assertNotEquals(0, fifteenPuzzle.getPuzzleValueOnPlace(0, 0));
+        assertNotEquals(1, fifteenPuzzle.getPuzzleValueOnPlace(1, 0));
+        assertNotEquals(4, fifteenPuzzle.getPuzzleValueOnPlace(0, 1));
+        assertNotEquals(15, fifteenPuzzle.getPuzzleValueOnPlace(3, 3));
+    }
+    */
 }
