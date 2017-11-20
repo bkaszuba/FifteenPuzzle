@@ -21,6 +21,9 @@ public class FifteenPuzzle {
     private String solution1;           //Possible solutions: ex. 012345678
     private String solution2;           // and 123456780
     private String solutionFound;       //Solution found (step by step answer)
+    private HashSet<String> hashSet;
+    private HashSet<String> tempHashSet;
+
 
     /**
      * FifteenPuzzle constructor with initialization of puzzle         in case of size = 4 [ 0 1 2 3 ]
@@ -37,22 +40,14 @@ public class FifteenPuzzle {
                 counter++;
             }
         }
-        this.blankField = new FieldCoordinates(0,1);
-        //This is puzzle board from this website and its solvable
-        //The shuffle function is down there but it is not checking if puzzle is solvable
-        puzzleArea[0][0] = 1;
-        puzzleArea[1][0] = 8;
-        puzzleArea[2][0] = 2;
-        puzzleArea[0][1] = 0;
-        puzzleArea[1][1] = 4;
-        puzzleArea[2][1] = 3;
-        puzzleArea[0][2] = 7;
-        puzzleArea[1][2] = 6;
-        puzzleArea[2][2] = 5;
+        this.blankField = new FieldCoordinates(0,0);
+
         this.nodes = new ArrayList<>();
         this.isSolved = false;
         configureLogger();
         getSolution();
+        hashSet = new HashSet<>();
+        tempHashSet = new HashSet<>();
     }
 
     /**
@@ -74,8 +69,13 @@ public class FifteenPuzzle {
 
         FieldCoordinates tmpBlankField = new FieldCoordinates(blankField.x, blankField.y);
         tmpBlankField.x = tmpBlankField.x + 1;
-        Node nextNode = new Node(node.getMoves().toString()+"right", this.puzzleSize, this.puzzleArea, tmpBlankField); /*Save the new setting to new node*/
+
+
+        if(checkIfStateVisited(getCurrentState()))      /*Check if already visted this node before adding it*/
+            return false;
+        Node nextNode = new Node(node.getMoves().toString()+" Right", this.puzzleSize, this.puzzleArea, tmpBlankField); /*Save the new setting to new node*/
         this.nodes.add(nextNode);
+        addCurrentStateToVisited();                     /*Add this state as Visited*/
         return true;
     }
 
@@ -88,6 +88,7 @@ public class FifteenPuzzle {
         setFifteenPuzzleFromNode(node);
         if(checkIfSolved())
             this.solutionFound = node.getMoves().toString();
+
         if(this.blankField.x <= 0)
             return false;
 
@@ -97,9 +98,11 @@ public class FifteenPuzzle {
 
         FieldCoordinates tmpBlankField = new FieldCoordinates(blankField.x, blankField.y);
         tmpBlankField.x = tmpBlankField.x - 1;
-
-        Node nextNode = new Node(node.getMoves().toString()+"left", this.puzzleSize, this.puzzleArea, tmpBlankField);
+        if(checkIfStateVisited(getCurrentState()))
+            return false;
+        Node nextNode = new Node(node.getMoves().toString()+" Left", this.puzzleSize, this.puzzleArea, tmpBlankField);
         this.nodes.add(nextNode);
+        addCurrentStateToVisited();
         return true;
     }
 
@@ -112,6 +115,7 @@ public class FifteenPuzzle {
         setFifteenPuzzleFromNode(node);
         if(checkIfSolved())
             this.solutionFound = node.getMoves().toString();
+
         if(this.blankField.y <= 0)
             return false;
 
@@ -121,8 +125,11 @@ public class FifteenPuzzle {
 
         FieldCoordinates tmpBlankField = new FieldCoordinates(blankField.x, blankField.y);
         tmpBlankField.y = tmpBlankField.y - 1;
-        Node nextNode = new Node(node.getMoves().toString()+"up", this.puzzleSize, this.puzzleArea, tmpBlankField);
+        if(checkIfStateVisited(getCurrentState()))
+            return false;
+        Node nextNode = new Node(node.getMoves().toString()+" Up", this.puzzleSize, this.puzzleArea, tmpBlankField);
         this.nodes.add(nextNode);
+        addCurrentStateToVisited();
         return true;
     }
 
@@ -135,6 +142,7 @@ public class FifteenPuzzle {
         setFifteenPuzzleFromNode(node);
         if(checkIfSolved())
             this.solutionFound = node.getMoves().toString();
+
         if(this.blankField.y >= this.puzzleSize - 1)
             return false;
 
@@ -144,8 +152,11 @@ public class FifteenPuzzle {
 
         FieldCoordinates tmpBlankField = new FieldCoordinates(blankField.x, blankField.y);
         tmpBlankField.y = tmpBlankField.y +1;
-        Node nextNode = new Node(node.getMoves().toString()+"down", this.puzzleSize, this.puzzleArea, tmpBlankField);
+        if(checkIfStateVisited(getCurrentState()))
+            return false;
+        Node nextNode = new Node(node.getMoves().toString()+" Down", this.puzzleSize, this.puzzleArea, tmpBlankField);
         this.nodes.add(nextNode);
+        addCurrentStateToVisited();
         return true;
     }
 
@@ -155,19 +166,23 @@ public class FifteenPuzzle {
     void BFS(){
         Node startingNode = new Node("start", this.puzzleSize, this.puzzleArea, this.blankField); /*Starting node the same as generated*/
         nodes.add(startingNode);
+        String s = getCurrentState();
+        tempHashSet.add(s);
 
         do{
             List<Node> currentNodes = new ArrayList<>();
-            for (Node node: nodes) {        /*Add all nodes created to the temporary list and clear is so moving function can add new nodes when moved*/
+
+            for (Node node: nodes) {        /*Add all nodes created to the temporary list and clear is so "tryAllMoves" function can add new nodes when moved*/
                 currentNodes.add(node);
             }
 
             this.nodes = new ArrayList<>(); /*Clear list*/
+            System.out.println(currentNodes.size());
             for(Node node: currentNodes){
-                //log.info(node.getMoves().toString());
                 tryAllMoves(node);          /*Try all possible moves*/
             }
-
+        hashSet.addAll(tempHashSet);
+        tempHashSet = new HashSet<>();
         }while(!this.isSolved);
         System.out.println("Solved with: " + this.solutionFound);
     }
@@ -211,7 +226,7 @@ public class FifteenPuzzle {
                         blankField.y = i;
                     }
                 }
-        }while(!allChanged);
+        }while(!isSolvable());
     }
 
     /**
@@ -219,10 +234,10 @@ public class FifteenPuzzle {
      * @param node - to use node's setting like board setup
      */
     void tryAllMoves(Node node){
-        moveDown(node);
-        moveUp(node);
         moveLeft(node);
         moveRight(node);
+        moveUp(node);
+        moveDown(node);
     }
 
     /**
@@ -307,6 +322,60 @@ public class FifteenPuzzle {
         this.solution2 = solution2.toString();
     }
 
+    static long merge(int[] array, int[] left, int[] right)
+    {
+        int i = 0, j = 0, count = 0;
+        while (i < left.length || j < right.length)
+        {
+            if (i == left.length)
+            {
+                array[i+j] = right[j];
+                j++;
+            }
+            else if (j == right.length)
+            {
+                array[i+j] = left[i];
+                i++;
+            }
+            else if (left[i] <= right[j])
+            {
+                array[i+j] = left[i];
+                i++;
+            }
+            else
+            {
+                array[i+j] = right[j];
+                count += left.length-i;
+                j++;
+            }
+        }
+        return count;
+    }
+
+    static long invCount(int[] array)
+    {
+        if (array.length < 2)
+            return 0;
+
+        int m = (array.length + 1) / 2;
+        int left[] = Arrays.copyOfRange(array, 0, m);
+        int right[] = Arrays.copyOfRange(array, m, array.length);
+
+        return invCount(left) + invCount(right) + merge(array, left, right);
+    }
+
+    boolean isSolvable()
+    {
+        long inversionCounter = 0;
+        for (int i=0;i<puzzleSize;i++)
+            inversionCounter = inversionCounter + invCount(puzzleArea[i]);
+
+        if(inversionCounter%2 ==0)
+            return true;
+        else
+            return false;
+    }
+
 
     int getBlankFieldX() {
         return blankField.x;
@@ -336,6 +405,44 @@ public class FifteenPuzzle {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    void addCurrentStateToVisited(){
+        StringBuilder sb = new StringBuilder();
+        for(int i=0; i<puzzleSize; i++){
+            for (int j=0; j<puzzleSize; j++){
+                sb.append(puzzleArea[j][i]);
+            }
+        }
+        tempHashSet.add(sb.toString());
+    }
+    Boolean checkIfStateVisited(String state){
+
+        return hashSet.contains(state);
+    }
+
+    String getCurrentState(){
+        StringBuilder sb = new StringBuilder();
+        for(int i=0; i<puzzleSize; i++){
+            for (int j=0; j<puzzleSize; j++){
+                sb.append(puzzleArea[j][i]);
+            }
+        }
+        return sb.toString();
+    }
+
+    public void setupPuzzleArea(int [] area){
+        int counter = 0;
+        for(int i=0; i<puzzleSize; i++){
+            for(int j=0; j<puzzleSize; j++){
+                puzzleArea[j][i] = area[counter];
+                if(area[counter] == 0){
+                    blankField.x = j;
+                    blankField.y = i;
+                }
+                counter++;
+            }
         }
     }
 }
