@@ -17,8 +17,7 @@ public class FifteenPuzzle {
     private Stack<Node> stackNodes;
     private Boolean isSolved;
     private final Logger log = Logger.getLogger(getClass().getName());
-    private String solution1;           //Possible solutions: ex. 012345678
-    private String solution2;           // and 123456780
+    private String solution;           // and 123456780
     private String solutionFound;       //Solution found (step by step answer)
     private int numberOfSteps;
     private HashSet<String> hashSet;
@@ -235,6 +234,7 @@ public class FifteenPuzzle {
         if (isSolved) {
             System.out.println("Solution: " + this.solutionFound);
             System.out.println("Number of moves: " + this.numberOfSteps);
+            System.out.println("Number of visited states: " + this.hashSet.size());
         } else
             System.out.println("Solution not found");
     }
@@ -260,6 +260,7 @@ public class FifteenPuzzle {
         System.out.println("====== BFS SOLUTION ======");
         System.out.println("Solution: " + this.solutionFound);
         System.out.println("Number of moves: " + this.numberOfSteps);
+        System.out.println("Number of visited states: " + this.hashSet.size());
 
     }
 
@@ -287,6 +288,7 @@ public class FifteenPuzzle {
         System.out.println("====== A-STAR SOLUTION with " + typeOfDistance + " distance ======");
         System.out.println("Solution: " + this.solutionFound);
         System.out.println("Number of moves: " + this.numberOfSteps);
+        System.out.println("Number of visited states: " + this.hashSet.size());
     }
 
     /**
@@ -351,7 +353,7 @@ public class FifteenPuzzle {
      * false - if it isn't
      */
     private boolean checkIfSolved(String currentState) {
-        if (Objects.equals(this.solution1, currentState) || Objects.equals(this.solution2, currentState)) {
+        if (Objects.equals(this.solution, currentState)) {
             this.isSolved = true;
             return true;
         } else
@@ -386,22 +388,17 @@ public class FifteenPuzzle {
      * Function for finding setting 2 ideal solution depending on the puzzleSize
      */
     private void getSolution() {
-        StringBuilder solution1 = new StringBuilder();
-        StringBuilder solution2 = new StringBuilder();
-        int counter1 = 0;
+        StringBuilder solution = new StringBuilder();
         int counter2 = 1;
-        for (int i = 0; i < puzzleSize; i++) {
-            for (int j = 0; j < puzzleSize; j++) {
-                solution1.append(Integer.toString(counter1));
+        for (int i = 1; i < puzzleSize*puzzleSize; i++) {
+
                 if (counter2 != puzzleSize * puzzleSize)
-                    solution2.append(Integer.toString(counter2));
-                counter1++;
+                    solution.append(Integer.toString(counter2));
                 counter2++;
-            }
+
         }
-        solution2.append(0);
-        this.solution1 = solution1.toString();
-        this.solution2 = solution2.toString();
+        solution.append(0);
+        this.solution = solution.toString();
     }
 
     private void addCurrentStateToVisited() {
