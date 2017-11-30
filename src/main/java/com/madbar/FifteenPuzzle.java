@@ -17,6 +17,7 @@ public class FifteenPuzzle {
     private FieldCoordinates blankField;
     private Queue<Node> nodes;
     private Queue<Node> priorityNodes;
+    private Stack<Node> stackNodes;
     private Boolean isSolved;
     private final Logger log = Logger.getLogger(getClass().getName());
     private String solution1;           //Possible solutions: ex. 012345678
@@ -47,6 +48,7 @@ public class FifteenPuzzle {
 
         this.nodes = new LinkedList<>();
         this.priorityNodes = new PriorityQueue<>();
+        this.stackNodes = new Stack<>();
         this.isSolved = false;
         configureLogger();
         getSolution();
@@ -89,6 +91,8 @@ public class FifteenPuzzle {
             this.nodes.add(nextNode);
         if(Objects.equals(this.solverMethod,"AStar"))
             this.priorityNodes.add(nextNode);
+        if(Objects.equals(this.solverMethod, "DFS"))
+            this.stackNodes.push(nextNode);
         addCurrentStateToVisited();                     /*Add this state as Visited*/
         return true;
     }
@@ -125,6 +129,9 @@ public class FifteenPuzzle {
             this.nodes.add(nextNode);
         if(Objects.equals(this.solverMethod,"AStar"))
             this.priorityNodes.add(nextNode);
+        if(Objects.equals(this.solverMethod, "DFS"))
+            this.stackNodes.push(nextNode);
+
         addCurrentStateToVisited();
         return true;
     }
@@ -161,6 +168,8 @@ public class FifteenPuzzle {
             this.nodes.add(nextNode);
         if(Objects.equals(this.solverMethod,"AStar"))
             this.priorityNodes.add(nextNode);
+        if(Objects.equals(this.solverMethod, "DFS"))
+            this.stackNodes.push(nextNode);
         addCurrentStateToVisited();
         return true;
     }
@@ -197,8 +206,30 @@ public class FifteenPuzzle {
             this.nodes.add(nextNode);
         if(Objects.equals(this.solverMethod,"AStar"))
             this.priorityNodes.add(nextNode);
+        if(Objects.equals(this.solverMethod, "DFS"))
+            this.stackNodes.push(nextNode);
         addCurrentStateToVisited();
         return true;
+    }
+    void DFS(){
+        stackNodes.clear();
+        Node startingNode = new Node("start", this.puzzleSize, this.puzzleArea, this.blankField, 0, typeOfDistance); /*Starting node the same as generated*/
+        stackNodes.push(startingNode);
+        String s = getCurrentState();
+        hashSet.clear();
+        hashSet.add(s);
+
+        while(!stackNodes.empty()){
+            Node current = stackNodes.pop();
+            if(current.numberOfMoves>=20)
+                current = stackNodes.pop();
+            if(this.isSolved)
+                break;
+            tryAllMoves(current);
+        }
+        System.out.println("====== DFS SOLUTION ======");
+        System.out.println("Solution: " + this.solutionFound);
+        System.out.println("Number of moves: " + this.numberOfSteps);
     }
 
     /**
@@ -215,9 +246,6 @@ public class FifteenPuzzle {
         while(!nodes.isEmpty()){
             Node current = nodes.poll();    //Get first element of the queue and delete it after
             if(this.isSolved){
-                break;
-            }
-            if (Runtime.getRuntime().freeMemory() < (.0001) * Runtime.getRuntime().totalMemory()){  //For out of memory problems
                 break;
             }
             tryAllMoves(current);
