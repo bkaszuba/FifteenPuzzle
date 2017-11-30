@@ -32,11 +32,14 @@ public class Node implements Comparable<Node> {
 
         int hammingDistance = getHammingDistance();
         int manhattanDistance = getManhattanDistance();
+        int linearConflict = getVerticalLinearConflict() + getHorizontalLinearConflict() + manhattanDistance;
 
         if (Objects.equals(whichDistance, "Hamming"))
             comparableValue = hammingDistance;
         else if (Objects.equals(whichDistance, "Manhattan"))
             comparableValue = manhattanDistance;
+        else if (Objects.equals(whichDistance, "LinearConflict"))
+            comparableValue = linearConflict;
     }
 
     /**
@@ -101,20 +104,71 @@ public class Node implements Comparable<Node> {
 
     }
 
-    /**
-     * Function for finding least value for priority queue used in AStar heuristic
-     *
-     * @param o - element to compare
-     * @return 1 - if value is higher
-     * -1 - if value is less
-     */
-    @Override
-    public int compareTo(Node o) {
-        if (this.equals(o))
-            return 0;
-        else if (comparableValue > o.comparableValue)
-            return 1;
-        else
-            return -1;
+    private int getVerticalLinearConflict() {
+        int linear = 0;
+        for (int i = 0; i < currentPuzzleState.length; i++) {
+            int max = -1;
+
+            for (int j = 0; j < currentPuzzleState.length; j++) {
+                int piece = this.currentPuzzleState[j][i];
+                if (piece != 0 && ((piece - 1) / currentPuzzleState.length) == i) {
+                    if (piece > max) {
+                        max = piece;
+                    } else {
+                        linear += 2;
+                    }
+                }
+            }
+
+        }
+        return  linear;
     }
-}
+    private int getHorizontalLinearConflict() {
+        int linear = 0;
+        for (int j = 0; j < currentPuzzleState.length; j++) {
+            int max = -1;
+
+            for (int i = 0; i < currentPuzzleState.length; i++) {
+                int piece = this.currentPuzzleState[j][i];
+                if(j<3) {
+                    if (piece != 0 && (piece % currentPuzzleState.length) == j + 1) {
+                        if (piece > max) {
+                            max = piece;
+                        } else {
+                            linear += 2;
+                        }
+                    }
+                }
+                else{
+                    if (piece != 0 && (piece % currentPuzzleState.length) == 0) {
+                        if (piece > max) {
+                            max = piece;
+                        } else {
+                            linear += 2;
+                        }
+                    }
+                }
+            }
+
+        }
+        return  linear;
+    }
+
+        /**
+         * Function for finding least value for priority queue used in AStar heuristic
+         *
+         * @param o - element to compare
+         * @return 1 - if value is higher
+         * -1 - if value is less
+         */
+        @Override
+        public int compareTo (Node o){
+            if (this.equals(o))
+                return 0;
+            else if (comparableValue > o.comparableValue)
+                return 1;
+            else
+                return -1;
+        }
+    }
+
