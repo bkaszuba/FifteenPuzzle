@@ -23,9 +23,11 @@ public class Node implements Comparable<Node> {
      */
     public Node(String move, int puzzleSize, int[][] puzzle, FieldCoordinates blank, int numberOfMoves, String whichDistance) {
         //this.numberOfMoves=0;
-        this.numberOfMoves = numberOfMoves + 1;
         moves = new StringBuilder();
+        if(!move.contains("start")){
         this.moves.append(move);
+        this.numberOfMoves = numberOfMoves + 1;
+        }
         currentPuzzleState = new int[puzzleSize][puzzleSize];
         coppy2dArray(puzzle);
         this.blank = blank;
@@ -34,9 +36,9 @@ public class Node implements Comparable<Node> {
         int manhattanDistance = getManhattanDistance();
         int linearConflict = getVerticalLinearConflict() + getHorizontalLinearConflict() + manhattanDistance;
 
-        if (Objects.equals(whichDistance, "Hamming"))
+        if (Objects.equals(whichDistance, "hamm"))
             comparableValue = hammingDistance;
-        else if (Objects.equals(whichDistance, "Manhattan"))
+        else if (Objects.equals(whichDistance, "manh"))
             comparableValue = manhattanDistance;
         else if (Objects.equals(whichDistance, "LinearConflict"))
             comparableValue = linearConflict;

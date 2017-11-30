@@ -1,5 +1,9 @@
 package com.madbar;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -17,15 +21,16 @@ public class FifteenPuzzle {
     private Stack<Node> stackNodes;
     private Boolean isSolved;
     private final Logger log = Logger.getLogger(getClass().getName());
-    private String solution1;           //Possible solutions: ex. 012345678
-    private String solution2;           // and 123456780
+    private String solution;           // and 123456780
     private String solutionFound;       //Solution found (step by step answer)
     private int numberOfSteps;
     private HashSet<String> hashSet;
     private String solverMethod;
     private String typeOfDistance;
-
-
+    private int processedStates = 0; // contains all states, can be duplicated
+    private int maxRecursionDepth = 0;
+    private long elapsedTime;
+    private long start;
     /**
      * FifteenPuzzle constructor with initialization of puzzle         in case of size = 4 [ 0 1 2 3 ]
      * where 0 is always the first field and its a "blank" field                           [ 4 5 6 7 ] etc...
@@ -81,15 +86,16 @@ public class FifteenPuzzle {
         FieldCoordinates tmpBlankField = new FieldCoordinates(blankField.x, blankField.y);
         tmpBlankField.x = tmpBlankField.x + 1;
 
+        processedStates++;
 
         if (checkIfStateVisited(getCurrentState()))      /*Check if already visted this node before adding it*/
             return false;
-        Node nextNode = new Node(node.getMoves().toString() + " Right", this.puzzleSize, this.puzzleArea, tmpBlankField, node.numberOfMoves, typeOfDistance); /*Save the new setting to new node*/
-        if (Objects.equals(this.solverMethod, "BFS"))
+        Node nextNode = new Node(node.getMoves().toString() + "R", this.puzzleSize, this.puzzleArea, tmpBlankField, node.numberOfMoves, typeOfDistance); /*Save the new setting to new node*/
+        if (Objects.equals(this.solverMethod, "bfs"))
             this.nodes.add(nextNode);
-        if (Objects.equals(this.solverMethod, "AStar"))
+        if (Objects.equals(this.solverMethod, "astr"))
             this.priorityNodes.add(nextNode);
-        if (Objects.equals(this.solverMethod, "DFS"))
+        if (Objects.equals(this.solverMethod, "dfs"))
             this.stackNodes.push(nextNode);
         addCurrentStateToVisited();                     /*Add this state as Visited*/
         return true;
@@ -121,17 +127,21 @@ public class FifteenPuzzle {
 
         FieldCoordinates tmpBlankField = new FieldCoordinates(blankField.x, blankField.y);
         tmpBlankField.x = tmpBlankField.x - 1;
+
+        processedStates++;
+
         if (checkIfStateVisited(getCurrentState()))
             return false;
-        Node nextNode = new Node(node.getMoves().toString() + " Left", this.puzzleSize, this.puzzleArea, tmpBlankField, node.numberOfMoves, typeOfDistance);
-        if (Objects.equals(this.solverMethod, "BFS"))
+        Node nextNode = new Node(node.getMoves().toString() + "L", this.puzzleSize, this.puzzleArea, tmpBlankField, node.numberOfMoves, typeOfDistance);
+        if (Objects.equals(this.solverMethod, "bfs"))
             this.nodes.add(nextNode);
-        if (Objects.equals(this.solverMethod, "AStar"))
+        if (Objects.equals(this.solverMethod, "astr"))
             this.priorityNodes.add(nextNode);
-        if (Objects.equals(this.solverMethod, "DFS"))
+        if (Objects.equals(this.solverMethod, "dfs"))
             this.stackNodes.push(nextNode);
 
         addCurrentStateToVisited();
+
         return true;
     }
 
@@ -161,16 +171,22 @@ public class FifteenPuzzle {
 
         FieldCoordinates tmpBlankField = new FieldCoordinates(blankField.x, blankField.y);
         tmpBlankField.y = tmpBlankField.y - 1;
+
+        processedStates++;
+
+
         if (checkIfStateVisited(getCurrentState()))
             return false;
-        Node nextNode = new Node(node.getMoves().toString() + " Up", this.puzzleSize, this.puzzleArea, tmpBlankField, node.numberOfMoves, typeOfDistance);
-        if (Objects.equals(this.solverMethod, "BFS"))
+        Node nextNode = new Node(node.getMoves().toString() + "U", this.puzzleSize, this.puzzleArea, tmpBlankField, node.numberOfMoves, typeOfDistance);
+        if (Objects.equals(this.solverMethod, "bfs"))
             this.nodes.add(nextNode);
-        if (Objects.equals(this.solverMethod, "AStar"))
+        if (Objects.equals(this.solverMethod, "astr"))
             this.priorityNodes.add(nextNode);
-        if (Objects.equals(this.solverMethod, "DFS"))
+        if (Objects.equals(this.solverMethod, "dfs"))
             this.stackNodes.push(nextNode);
+
         addCurrentStateToVisited();
+
         return true;
     }
 
@@ -200,20 +216,26 @@ public class FifteenPuzzle {
 
         FieldCoordinates tmpBlankField = new FieldCoordinates(blankField.x, blankField.y);
         tmpBlankField.y = tmpBlankField.y + 1;
+
+        processedStates++;
+
+
         if (checkIfStateVisited(getCurrentState()))
             return false;
-        Node nextNode = new Node(node.getMoves().toString() + " Down", this.puzzleSize, this.puzzleArea, tmpBlankField, node.numberOfMoves, typeOfDistance);
-        if (Objects.equals(this.solverMethod, "BFS"))
+        Node nextNode = new Node(node.getMoves().toString() + "D", this.puzzleSize, this.puzzleArea, tmpBlankField, node.numberOfMoves, typeOfDistance);
+        if (Objects.equals(this.solverMethod, "bfs"))
             this.nodes.add(nextNode);
-        if (Objects.equals(this.solverMethod, "AStar"))
+        if (Objects.equals(this.solverMethod, "astr"))
             this.priorityNodes.add(nextNode);
-        if (Objects.equals(this.solverMethod, "DFS"))
+        if (Objects.equals(this.solverMethod, "dfs"))
             this.stackNodes.push(nextNode);
         addCurrentStateToVisited();
+
         return true;
     }
 
     void DFS(int depth) {
+        start = System.nanoTime();
         stackNodes.clear();
         Node startingNode = new Node("start", this.puzzleSize, this.puzzleArea, this.blankField, 0, typeOfDistance); /*Starting node the same as generated*/
         stackNodes.push(startingNode);
@@ -230,19 +252,36 @@ public class FifteenPuzzle {
             if (this.isSolved)
                 break;
             tryAllMoves(current);
+            if(maxRecursionDepth < current.numberOfMoves)
+            {
+                maxRecursionDepth = current.numberOfMoves;
+            }
         }
-        System.out.println("====== DFS SOLUTION ======");
-        if (isSolved) {
-            System.out.println("Solution: " + this.solutionFound);
-            System.out.println("Number of moves: " + this.numberOfSteps);
-        } else
-            System.out.println("Solution not found");
+        elapsedTime = System.nanoTime() - start;
+//        System.out.println("====== DFS SOLUTION ======");
+//        if (isSolved) {
+//            System.out.println("Solution: " + this.solutionFound);
+//            System.out.println("Number of moves: " + this.numberOfSteps);
+//            System.out.println("Number of visited states: " + this.processedStates);
+//            System.out.println("Number of processed states: " + this.hashSet.size());
+//            System.out.println("Number of max recursive depth: " + maxRecursionDepth);
+//
+//
+//        } else {
+//            this.numberOfSteps = -1;
+//            System.out.println("Number of moves: " + this.numberOfSteps);
+//            System.out.println("Solution not found");
+//        }
+        if (!isSolved) {
+            this.numberOfSteps = -1;
+        }
     }
 
     /**
      * Function for solving puzzle using BFS
      */
     void BFS() {
+        start = System.nanoTime();
         nodes.clear();
         Node startingNode = new Node("start", this.puzzleSize, this.puzzleArea, this.blankField, 0, typeOfDistance); /*Starting node the same as generated*/
         nodes.add(startingNode);        //Add starting node
@@ -255,18 +294,30 @@ public class FifteenPuzzle {
             if (this.isSolved) {
                 break;
             }
-            tryAllMoves(current);
+            neighborhoodSearch(typeOfDistance,current);
+            //tryAllMoves(current);
+            if(maxRecursionDepth < current.numberOfMoves)
+            {
+                maxRecursionDepth = current.numberOfMoves;
+            }
         }
-        System.out.println("====== BFS SOLUTION ======");
-        System.out.println("Solution: " + this.solutionFound);
-        System.out.println("Number of moves: " + this.numberOfSteps);
-
+        elapsedTime = System.nanoTime() - start;
+//        System.out.println("====== BFS SOLUTION ======");
+//        System.out.println("Solution: " + this.solutionFound);
+//        System.out.println("Number of moves: " + this.numberOfSteps);
+//        System.out.println("Number of visited states: " + this.processedStates);
+//        System.out.println("Number of processed states: " + this.hashSet.size());
+//        System.out.println("Number of max recursive depth: " + maxRecursionDepth);
+        if (!isSolved) {
+            this.numberOfSteps = -1;
+        }
     }
 
     /**
      * Function for solving puzzle using AStar
      */
     void AStar() {
+        start = System.nanoTime();
         priorityNodes.clear();
         Node startingNode = new Node("start", this.puzzleSize, this.puzzleArea, this.blankField, 0, typeOfDistance); /*Starting node the same as generated*/
         priorityNodes.add(startingNode);
@@ -283,10 +334,23 @@ public class FifteenPuzzle {
                 break;
             }
             tryAllMoves(current);
+            if(maxRecursionDepth < current.numberOfMoves)
+            {
+                maxRecursionDepth = current.numberOfMoves;
+            }
         }
-        System.out.println("====== A-STAR SOLUTION with " + typeOfDistance + " distance ======");
-        System.out.println("Solution: " + this.solutionFound);
-        System.out.println("Number of moves: " + this.numberOfSteps);
+
+//        System.out.println("====== A-STAR SOLUTION with " + typeOfDistance + " distance ======");
+//        System.out.println("Solution: " + this.solutionFound);
+//        System.out.println("Number of moves: " + this.numberOfSteps);
+//        System.out.println("Number of visited states: " + this.processedStates);
+//        System.out.println("Number of processed states: " + this.hashSet.size());
+//        System.out.println("Number of max recursive depth: " + maxRecursionDepth);
+
+        if (!isSolved) {
+            this.numberOfSteps = -1;
+        }
+        elapsedTime = System.nanoTime() - start;
     }
 
     /**
@@ -351,7 +415,7 @@ public class FifteenPuzzle {
      * false - if it isn't
      */
     private boolean checkIfSolved(String currentState) {
-        if (Objects.equals(this.solution1, currentState) || Objects.equals(this.solution2, currentState)) {
+        if (Objects.equals(this.solution, currentState)) {
             this.isSolved = true;
             return true;
         } else
@@ -381,27 +445,109 @@ public class FifteenPuzzle {
         return true;
     }
 
+    private void RDUL(Node node) {
+        moveRight(node);
+        moveDown(node);
+        moveUp(node);
+        moveLeft(node);
+    }
+    private void RDLU(Node node) {
+        moveRight(node);
+        moveDown(node);
+        moveLeft(node);
+        moveUp(node);
+    }
+    private void DRUL(Node node) {
+        moveDown(node);
+        moveRight(node);
+        moveUp(node);
+        moveLeft(node);
+    }
+    private void DRLU(Node node) {
+        moveDown(node);
+        moveRight(node);
+        moveLeft(node);
+        moveUp(node);
+    }
+    private void LUDR(Node node) {
+        moveLeft(node);
+        moveUp(node);
+        moveDown(node);
+        moveRight(node);
+    }
+    private void LURD(Node node) {
+        moveLeft(node);
+        moveUp(node);
+        moveRight(node);
+        moveDown(node);
+    }
+    private void ULDR(Node node) {
+
+        moveUp(node);
+        moveLeft(node);
+        moveDown(node);
+        moveRight(node);
+    }
+    private void ULRD(Node node) {
+        moveUp(node);
+        moveLeft(node);
+        moveRight(node);
+        moveDown(node);
+    }
+
+
+
+
+
+
+
+
+    void neighborhoodSearch(String typeOfDistance, Node node){
+
+        switch (typeOfDistance) {
+            case "RDUL":
+                RDUL(node);
+                break;
+            case "RDLU":
+                RDLU(node);
+                break;
+            case "DRUL":
+                DRUL(node);
+                break;
+            case "DRLU":
+                DRLU(node);
+                break;
+            case "LUDR":
+                LUDR(node);
+                break;
+            case "LURD":
+                LURD(node);
+                break;
+            case "ULDR":
+                ULDR(node);
+                break;
+            case "ULRD":
+                ULRD(node);
+                break;
+
+        }
+    }
 
     /**
      * Function for finding setting 2 ideal solution depending on the puzzleSize
      */
     private void getSolution() {
-        StringBuilder solution1 = new StringBuilder();
-        StringBuilder solution2 = new StringBuilder();
-        int counter1 = 0;
+        StringBuilder solution = new StringBuilder();
         int counter2 = 1;
-        for (int i = 0; i < puzzleSize; i++) {
-            for (int j = 0; j < puzzleSize; j++) {
-                solution1.append(Integer.toString(counter1));
+        for (int i = 1; i < puzzleSize*puzzleSize; i++) {
+
                 if (counter2 != puzzleSize * puzzleSize)
-                    solution2.append(Integer.toString(counter2));
-                counter1++;
+                    solution.append(Integer.toString(counter2));
                 counter2++;
-            }
+
         }
-        solution2.append(0);
-        this.solution1 = solution1.toString();
-        this.solution2 = solution2.toString();
+        solution.append(0);
+        this.solution = solution.toString();
     }
 
     private void addCurrentStateToVisited() {
@@ -413,6 +559,8 @@ public class FifteenPuzzle {
         }
         hashSet.add(sb.toString());
     }
+
+
 
     private Boolean checkIfStateVisited(String state) {
 
@@ -429,6 +577,56 @@ public class FifteenPuzzle {
         return sb.toString();
     }
 
+    public void saveAdditionalInformationToFile(String filename) throws IOException {
+        FileWriter fw = new FileWriter(filename);
+        fw.write(Integer.toString(this.numberOfSteps) + "\n");
+        fw.write(Integer.toString(processedStates) + "\n");
+        fw.write(Integer.toString(this.hashSet.size()) + "\n");
+        fw.write(Integer.toString(maxRecursionDepth) + "\n");
+        float tmp = (float)elapsedTime/1000000;
+        fw.write(String.format("%.3f",tmp ) + "\n");
+        fw.close();
+    }
+    public void saveSolutionToFile(String filename) {
+        FileWriter fileWriter = null;
+        try {
+            fileWriter = new FileWriter(filename);
+            try {
+                fileWriter.write(this.numberOfSteps + "\n" + this.solutionFound);
+            } catch (NullPointerException e) {
+                fileWriter.write("0");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fileWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    void readFromFile(String filename) throws FileNotFoundException {
+        Scanner scanner = new Scanner(new File(filename));
+        this.puzzleSize = scanner.nextInt();
+        this.puzzleSize = scanner.nextInt();
+
+        for (int i = 0; i<this.puzzleSize; ++i){
+            for (int j = 0; j<this.puzzleSize ; ++j){
+                int s = scanner.nextInt();
+                this.puzzleArea[j][i] = s;
+                if(s == 0)
+                {
+                    blankField.x = j;
+                    blankField.y = i;
+                }
+
+            }
+        }
+        scanner.close();
+
+    }
     void setupPuzzleArea(int[] area) {
         int counter = 0;
         for (int i = 0; i < puzzleSize; i++) {
